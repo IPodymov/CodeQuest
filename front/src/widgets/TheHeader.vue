@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import { ref } from 'vue';
+﻿<script setup lang="ts">
+import { computed, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useUserStore } from '@/entities/user/model/store';
 import { useI18nStore } from '@/entities/i18n/model/store';
@@ -8,7 +8,12 @@ const userStore = useUserStore();
 const router = useRouter();
 const i18n = useI18nStore();
 
-// Состояние для мобильного меню и уведомлений
+const hasAdminAccess = computed(() => {
+  const roles = userStore.user?.roles ?? [];
+  return roles.includes('admin') || roles.includes('organizer');
+});
+
+// РЎРѕСЃС‚РѕСЏРЅРёРµ РґР»СЏ РјРѕР±РёР»СЊРЅРѕРіРѕ РјРµРЅСЋ Рё СѓРІРµРґРѕРјР»РµРЅРёР№
 const isMobileMenuOpen = ref(false);
 const isNotifOpen = ref(false);
 
@@ -23,7 +28,7 @@ const logout = () => {
   <header class="sticky top-0 z-50 w-full border-b border-surface-border bg-[#111a22]/95 backdrop-blur-sm">
     <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
       
-      <!-- Логотип -->
+      <!-- Р›РѕРіРѕС‚РёРї -->
       <RouterLink to="/" class="flex items-center gap-4 text-white cursor-pointer group z-50">
         <div class="flex items-center justify-center size-8 rounded-lg bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
           <span class="material-symbols-outlined text-[20px]">terminal</span>
@@ -31,15 +36,16 @@ const logout = () => {
         <h2 class="text-white text-xl font-bold leading-tight tracking-tight">CodeQuest</h2>
       </RouterLink>
 
-      <!-- Навигация (Десктоп) -->
+      <!-- РќР°РІРёРіР°С†РёСЏ (Р”РµСЃРєС‚РѕРї) -->
       <nav class="hidden md:flex items-center gap-8">
         <RouterLink to="/" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.home') }}</RouterLink>
         <RouterLink to="/contests" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.contests') }}</RouterLink>
         <RouterLink to="/calendar" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.calendar') }}</RouterLink>
         <RouterLink to="/info" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.about') }}</RouterLink>
+        <RouterLink v-if="hasAdminAccess" to="/admin" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.admin') }}</RouterLink>
       </nav>
 
-      <!-- Правая часть (Десктоп) -->
+      <!-- РџСЂР°РІР°СЏ С‡Р°СЃС‚СЊ (Р”РµСЃРєС‚РѕРї) -->
       <div class="hidden md:flex items-center gap-4">
         <button
           @click="i18n.toggleLocale()"
@@ -78,19 +84,20 @@ const logout = () => {
         </template>
       </div>
 
-      <!-- Кнопка Мобильного меню (Гамбургер) -->
+      <!-- РљРЅРѕРїРєР° РњРѕР±РёР»СЊРЅРѕРіРѕ РјРµРЅСЋ (Р“Р°РјР±СѓСЂРіРµСЂ) -->
       <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="md:hidden text-white p-2 z-50">
         <span class="material-symbols-outlined text-[28px]">{{ isMobileMenuOpen ? 'close' : 'menu' }}</span>
       </button>
     </div>
 
-    <!-- МОБИЛЬНОЕ МЕНЮ (Выезжает поверх всего) -->
+    <!-- РњРћР‘РР›Р¬РќРћР• РњР•РќР® (Р’С‹РµР·Р¶Р°РµС‚ РїРѕРІРµСЂС… РІСЃРµРіРѕ) -->
     <div v-if="isMobileMenuOpen" class="fixed inset-0 bg-[#111a22] z-[100] flex flex-col pt-24 px-6 animate-fadeIn md:hidden overflow-y-auto">
         <nav class="flex flex-col gap-6 text-xl font-bold">
             <RouterLink to="/" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.home') }}</RouterLink>
             <RouterLink to="/contests" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.contests') }}</RouterLink>
             <RouterLink to="/calendar" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.calendar') }}</RouterLink>
             <RouterLink to="/info" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.about') }}</RouterLink>
+            <RouterLink v-if="hasAdminAccess" to="/admin" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.admin') }}</RouterLink>
             <button
               @click="i18n.toggleLocale()"
               class="mt-2 bg-surface-dark text-white h-12 flex items-center justify-center rounded-xl border border-surface-border"

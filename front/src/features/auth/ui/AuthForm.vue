@@ -13,29 +13,48 @@ const router = useRouter();
 const i18n = useI18nStore();
 
 const formData = ref({
-  name: '',
+  username: '',
   email: '',
+  identifier: '',
   password: ''
 });
 
-const handleSubmit = () => {
+const isLoading = ref(false);
+
+const handleSubmit = async () => {
   if (props.mode === 'login') {
-    if (!formData.value.email) return alert(i18n.t('authForm.emailRequired'));
-    userStore.login(formData.value.email);
-    router.push('/profile');
-  } else {
-    if (!formData.value.name || !formData.value.email || !formData.value.password) {
-      return alert(i18n.t('authForm.allFieldsRequired'));
+    if (!formData.value.identifier || !formData.value.password) {
+      return alert(i18n.t('authForm.identifierRequired'));
     }
-    const newUser = {
-      username: formData.value.name,
+    try {
+      isLoading.value = true;
+      await userStore.login(formData.value.identifier, formData.value.password);
+      router.push('/profile');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : i18n.t('authForm.requestFailed'));
+    } finally {
+      isLoading.value = false;
+    }
+    return;
+  }
+
+  if (!formData.value.username || !formData.value.email || !formData.value.password) {
+    return alert(i18n.t('authForm.allFieldsRequired'));
+  }
+  try {
+    isLoading.value = true;
+    await userStore.register({
+      username: formData.value.username,
       email: formData.value.email,
-      handle: '@' + formData.value.name.toLowerCase().replace(/\s/g, '_'),
+      password: formData.value.password,
       location: i18n.t('authForm.locationDefault'),
       avatar: null
-    };
-    userStore.register(newUser);
+    });
     router.push('/profile');
+  } catch (error) {
+    alert(error instanceof Error ? error.message : i18n.t('authForm.requestFailed'));
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
@@ -47,15 +66,28 @@ const handleSubmit = () => {
       <div class="relative flex items-center">
         <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">person</span>
         <input 
-          v-model="formData.name" 
+          v-model="formData.username" 
           class="w-full h-12 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white pl-11 pr-4 focus:ring-primary focus:border-primary" 
           placeholder="ivan_coder" 
           type="text" 
         />
       </div>
     </label>
-    
-    <label class="flex flex-col gap-1.5">
+
+    <label v-if="mode === 'login'" class="flex flex-col gap-1.5">
+      <span class="text-slate-700 dark:text-slate-200 text-sm font-medium">{{ i18n.t('authForm.identifier') }}</span>
+      <div class="relative flex items-center">
+        <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">person</span>
+        <input 
+          v-model="formData.identifier" 
+          class="w-full h-12 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white pl-11 pr-4 focus:ring-primary focus:border-primary" 
+          :placeholder="i18n.t('authForm.identifierPlaceholder')" 
+          type="text" 
+        />
+      </div>
+    </label>
+
+    <label v-else class="flex flex-col gap-1.5">
       <span class="text-slate-700 dark:text-slate-200 text-sm font-medium">{{ i18n.t('authForm.email') }}</span>
       <div class="relative flex items-center">
         <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">mail</span>
@@ -81,7 +113,7 @@ const handleSubmit = () => {
       </div>
     </label>
 
-    <button class="w-full h-12 mt-2 bg-primary hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2">
+    <button :disabled="isLoading" class="w-full h-12 mt-2 bg-primary hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
       <span>{{ mode === 'login' ? i18n.t('authForm.login') : i18n.t('authForm.register') }}</span>
       <span class="material-symbols-outlined text-lg">{{ mode === 'login' ? 'login' : 'person_add' }}</span>
     </button>

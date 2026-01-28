@@ -5,7 +5,8 @@ export const messages = {
         home: 'Главная',
         contests: 'Соревнования',
         calendar: 'Календарь',
-        about: 'О нас'
+        about: 'О нас',
+        admin: 'Админ'
       },
       notifications: 'Уведомления',
       notificationsEmpty: 'Здесь пока пусто.',
@@ -275,6 +276,35 @@ export const messages = {
       ratingDelta: '+45 к рейтингу',
       historyItemDate: '15 Января 2026'
     },
+    admin: {
+      title: 'Админ‑панель',
+      subtitle: 'Управляйте пользователями, контентом и доступом. Здесь будут инструменты модерации и аналитики.',
+      badge: 'Admin',
+      loginTitle: 'Требуется вход',
+      loginText: 'Войдите в аккаунт, чтобы открыть админ‑панель.',
+      accessDeniedTitle: 'Нет доступа',
+      accessDeniedText: 'Нужна роль admin или organizer.',
+      stats: {
+        users: 'Пользователи',
+        contests: 'Соревнования',
+        reports: 'Жалобы',
+        roles: 'Роли'
+      },
+      actions: {
+        title: 'Быстрые действия',
+        createContest: 'Создать турнир',
+        manageUsers: 'Управление пользователями',
+        manageRoles: 'Управление ролями',
+        reviewReports: 'Разбор жалоб'
+      },
+      statusTitle: 'Статус системы',
+      status: {
+        api: 'API',
+        database: 'База данных',
+        version: 'Версия'
+      },
+      comingSoon: 'Подключим реальные данные после настройки бэкенда.'
+    },
     editProfile: {
       title: 'Редактировать профиль',
       username: 'Имя пользователя',
@@ -293,11 +323,15 @@ export const messages = {
     authForm: {
       username: 'Имя пользователя',
       email: 'Email',
+      identifier: 'Email или ник',
+      identifierPlaceholder: 'email или ник',
       password: 'Пароль',
       login: 'Войти',
       register: 'Создать аккаунт',
       emailRequired: 'Введите Email',
+      identifierRequired: 'Введите Email или ник',
       allFieldsRequired: 'Заполните все поля',
+      requestFailed: 'Ошибка запроса',
       locationDefault: 'Не указано'
     }
   },
@@ -307,7 +341,8 @@ export const messages = {
         home: 'Home',
         contests: 'Contests',
         calendar: 'Calendar',
-        about: 'About'
+        about: 'About',
+        admin: 'Admin'
       },
       notifications: 'Notifications',
       notificationsEmpty: 'Nothing here yet.',
@@ -577,6 +612,35 @@ export const messages = {
       ratingDelta: '+45 rating',
       historyItemDate: 'January 15, 2026'
     },
+    admin: {
+      title: 'Admin panel',
+      subtitle: 'Manage users, content, and access. Moderation and analytics tools will appear here.',
+      badge: 'Admin',
+      loginTitle: 'Sign in required',
+      loginText: 'Please sign in to access the admin panel.',
+      accessDeniedTitle: 'Access denied',
+      accessDeniedText: 'Admin or organizer role required.',
+      stats: {
+        users: 'Users',
+        contests: 'Contests',
+        reports: 'Reports',
+        roles: 'Roles'
+      },
+      actions: {
+        title: 'Quick actions',
+        createContest: 'Create contest',
+        manageUsers: 'Manage users',
+        manageRoles: 'Manage roles',
+        reviewReports: 'Review reports'
+      },
+      statusTitle: 'System status',
+      status: {
+        api: 'API',
+        database: 'Database',
+        version: 'Version'
+      },
+      comingSoon: 'Live data will appear after backend wiring.'
+    },
     editProfile: {
       title: 'Edit profile',
       username: 'Username',
@@ -595,11 +659,15 @@ export const messages = {
     authForm: {
       username: 'Username',
       email: 'Email',
+      identifier: 'Email or username',
+      identifierPlaceholder: 'email or username',
       password: 'Password',
       login: 'Sign in',
       register: 'Create account',
       emailRequired: 'Enter your email',
+      identifierRequired: 'Enter email or username',
       allFieldsRequired: 'Please fill out all fields',
+      requestFailed: 'Request failed',
       locationDefault: 'Not specified'
     }
   }
