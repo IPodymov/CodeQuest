@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
 import { useStorage } from '@vueuse/core';
+import { useI18nStore } from '@/entities/i18n/model/store';
 
 export interface User {
   username: string;
@@ -13,6 +13,7 @@ export interface User {
 export const useUserStore = defineStore('user', () => {
   // useStorage автоматически сохраняет данные в localStorage
   const user = useStorage<User | null>('codequest_user', null, localStorage, { mergeDefaults: true });
+  const i18n = useI18nStore();
 
   function login(email: string) {
     // Имитация входа (как в твоем скрипте)
@@ -20,7 +21,7 @@ export const useUserStore = defineStore('user', () => {
       username: "Alex Coder",
       email: email,
       handle: "@alexcoder",
-      location: "Санкт-Петербург",
+      location: i18n.locale === 'ru' ? 'Санкт-Петербург' : 'Saint Petersburg',
       avatar: null
     };
   }

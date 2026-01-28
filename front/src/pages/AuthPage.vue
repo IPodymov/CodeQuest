@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import AuthForm from '@/features/auth/ui/AuthForm.vue';
+import { useI18nStore } from '@/entities/i18n/model/store';
 
 const activeTab = ref<'login' | 'register'>('login');
+const i18n = useI18nStore();
 </script>
 
 <template>
@@ -11,8 +13,8 @@ const activeTab = ref<'login' | 'register'>('login');
       <div class="bg-white dark:bg-[#16212e] rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-2xl shadow-black/20 overflow-hidden">
         
         <div class="px-8 pt-8 pb-4 text-center">
-          <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Добро пожаловать</h1>
-          <p class="text-slate-500 text-sm">Войдите или создайте аккаунт</p>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">{{ i18n.t('auth.title') }}</h1>
+          <p class="text-slate-500 text-sm">{{ i18n.t('auth.subtitle') }}</p>
         </div>
 
         <div class="px-8 mt-2 flex border-b border-slate-200 dark:border-slate-700">
@@ -20,13 +22,13 @@ const activeTab = ref<'login' | 'register'>('login');
             @click="activeTab = 'login'" 
             :class="activeTab === 'login' ? 'text-primary border-primary' : 'text-slate-500 border-transparent'" 
             class="flex-1 pb-3 pt-2 text-center text-sm font-bold border-b-2 transition-colors">
-            Вход
+            {{ i18n.t('auth.loginTab') }}
           </button>
           <button 
             @click="activeTab = 'register'" 
             :class="activeTab === 'register' ? 'text-primary border-primary' : 'text-slate-500 border-transparent'" 
             class="flex-1 pb-3 pt-2 text-center text-sm font-bold border-b-2 transition-colors">
-            Регистрация
+            {{ i18n.t('auth.registerTab') }}
           </button>
         </div>
 
@@ -36,7 +38,7 @@ const activeTab = ref<'login' | 'register'>('login');
           <div class="mt-6 flex flex-col gap-4">
              <div class="relative flex items-center justify-center">
                 <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
-                <span class="relative bg-white dark:bg-[#16212e] px-2 text-xs text-slate-500 uppercase">Или через</span>
+                <span class="relative bg-white dark:bg-[#16212e] px-2 text-xs text-slate-500 uppercase">{{ i18n.t('auth.or') }}</span>
               </div>
               <div class="grid grid-cols-2 gap-3">
                  <button class="flex items-center justify-center gap-2 h-10 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-white">

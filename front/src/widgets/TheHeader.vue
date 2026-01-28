@@ -2,9 +2,11 @@
 import { ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useUserStore } from '@/entities/user/model/store';
+import { useI18nStore } from '@/entities/i18n/model/store';
 
 const userStore = useUserStore();
 const router = useRouter();
+const i18n = useI18nStore();
 
 // Состояние для мобильного меню и уведомлений
 const isMobileMenuOpen = ref(false);
@@ -31,14 +33,21 @@ const logout = () => {
 
       <!-- Навигация (Десктоп) -->
       <nav class="hidden md:flex items-center gap-8">
-        <RouterLink to="/" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">Главная</RouterLink>
-        <RouterLink to="/contests" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">Соревнования</RouterLink>
-        <RouterLink to="/calendar" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">Календарь</RouterLink>
-        <RouterLink to="/info" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">О нас</RouterLink>
+        <RouterLink to="/" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.home') }}</RouterLink>
+        <RouterLink to="/contests" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.contests') }}</RouterLink>
+        <RouterLink to="/calendar" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.calendar') }}</RouterLink>
+        <RouterLink to="/info" class="text-text-secondary hover:text-white text-sm font-medium transition-colors" active-class="text-white font-bold">{{ i18n.t('header.nav.about') }}</RouterLink>
       </nav>
 
       <!-- Правая часть (Десктоп) -->
       <div class="hidden md:flex items-center gap-4">
+        <button
+          @click="i18n.toggleLocale()"
+          class="flex items-center justify-center h-9 px-3 rounded-lg border border-surface-border bg-surface-dark text-text-secondary hover:text-white hover:border-primary transition-colors text-xs font-bold"
+          :title="i18n.t('header.language')"
+        >
+          <span>{{ i18n.locale === 'ru' ? i18n.t('header.langEn') : i18n.t('header.langRu') }}</span>
+        </button>
         <template v-if="userStore.user">
           <div class="relative">
             <button @click="isNotifOpen = !isNotifOpen" class="flex items-center justify-center rounded-full size-10 hover:bg-surface-dark text-white transition-colors relative">
@@ -46,8 +55,8 @@ const logout = () => {
               <span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-background-dark"></span>
             </button>
             <div v-if="isNotifOpen" @click.stop class="absolute right-0 mt-2 w-64 bg-surface-dark border border-surface-border rounded-xl shadow-xl z-50 p-4 animate-fadeIn">
-              <h4 class="text-white font-bold text-sm mb-2">Уведомления</h4>
-              <p class="text-text-secondary text-xs">Здесь пока пусто.</p>
+              <h4 class="text-white font-bold text-sm mb-2">{{ i18n.t('header.notifications') }}</h4>
+              <p class="text-text-secondary text-xs">{{ i18n.t('header.notificationsEmpty') }}</p>
             </div>
           </div>
           
@@ -64,7 +73,7 @@ const logout = () => {
         
         <template v-else>
           <RouterLink to="/auth" class="flex items-center justify-center rounded-lg h-9 px-4 bg-primary hover:bg-primary-dark text-white text-sm font-bold transition-all shadow-lg shadow-primary/20">
-            <span>Войти</span>
+            <span>{{ i18n.t('header.login') }}</span>
           </RouterLink>
         </template>
       </div>
@@ -78,22 +87,27 @@ const logout = () => {
     <!-- МОБИЛЬНОЕ МЕНЮ (Выезжает поверх всего) -->
     <div v-if="isMobileMenuOpen" class="fixed inset-0 bg-[#111a22] z-[100] flex flex-col pt-24 px-6 animate-fadeIn md:hidden overflow-y-auto">
         <nav class="flex flex-col gap-6 text-xl font-bold">
-            <RouterLink to="/" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">Главная</RouterLink>
-            <RouterLink to="/contests" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">Соревнования</RouterLink>
-            <RouterLink to="/calendar" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">Календарь</RouterLink>
-            <RouterLink to="/info" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">О нас</RouterLink>
-            
+            <RouterLink to="/" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.home') }}</RouterLink>
+            <RouterLink to="/contests" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.contests') }}</RouterLink>
+            <RouterLink to="/calendar" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.calendar') }}</RouterLink>
+            <RouterLink to="/info" @click="isMobileMenuOpen = false" class="text-white border-b border-surface-border pb-4">{{ i18n.t('header.nav.about') }}</RouterLink>
+            <button
+              @click="i18n.toggleLocale()"
+              class="mt-2 bg-surface-dark text-white h-12 flex items-center justify-center rounded-xl border border-surface-border"
+            >
+              {{ i18n.t('header.language') }}: {{ i18n.locale === 'ru' ? i18n.t('header.langEn') : i18n.t('header.langRu') }}
+            </button>
             <template v-if="!userStore.user">
-                <RouterLink to="/auth" @click="isMobileMenuOpen = false" class="mt-4 bg-primary text-white h-14 flex items-center justify-center rounded-xl shadow-lg">
-                    Войти
+                <RouterLink to="/auth" @click="isMobileMenuOpen = false" class="mt-2 bg-primary text-white h-14 flex items-center justify-center rounded-xl shadow-lg">
+                    {{ i18n.t('header.login') }}
                 </RouterLink>
             </template>
             <template v-else>
-                <RouterLink to="/profile" @click="isMobileMenuOpen = false" class="mt-4 bg-surface-dark text-white h-14 flex items-center justify-center rounded-xl border border-surface-border">
-                   Мой профиль
+                <RouterLink to="/profile" @click="isMobileMenuOpen = false" class="mt-2 bg-surface-dark text-white h-14 flex items-center justify-center rounded-xl border border-surface-border">
+                   {{ i18n.t('header.profile') }}
                 </RouterLink>
                 <button @click="logout" class="mt-2 text-red-500 font-bold h-14 flex items-center justify-center">
-                   Выйти
+                   {{ i18n.t('header.logout') }}
                 </button>
             </template>
         </nav>

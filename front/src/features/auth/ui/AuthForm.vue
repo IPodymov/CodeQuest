@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/entities/user/model/store';
+import { useI18nStore } from '@/entities/i18n/model/store';
 
 const props = defineProps<{ 
   mode: 'login' | 'register' 
@@ -9,6 +10,7 @@ const props = defineProps<{
 
 const userStore = useUserStore();
 const router = useRouter();
+const i18n = useI18nStore();
 
 const formData = ref({
   name: '',
@@ -18,18 +20,18 @@ const formData = ref({
 
 const handleSubmit = () => {
   if (props.mode === 'login') {
-    if (!formData.value.email) return alert('Введите Email');
+    if (!formData.value.email) return alert(i18n.t('authForm.emailRequired'));
     userStore.login(formData.value.email);
     router.push('/profile');
   } else {
     if (!formData.value.name || !formData.value.email || !formData.value.password) {
-      return alert('Заполните все поля');
+      return alert(i18n.t('authForm.allFieldsRequired'));
     }
     const newUser = {
       username: formData.value.name,
       email: formData.value.email,
       handle: '@' + formData.value.name.toLowerCase().replace(/\s/g, '_'),
-      location: 'Не указано',
+      location: i18n.t('authForm.locationDefault'),
       avatar: null
     };
     userStore.register(newUser);
@@ -41,7 +43,7 @@ const handleSubmit = () => {
 <template>
   <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
     <label v-if="mode === 'register'" class="flex flex-col gap-1.5">
-      <span class="text-slate-700 dark:text-slate-200 text-sm font-medium">Имя пользователя</span>
+      <span class="text-slate-700 dark:text-slate-200 text-sm font-medium">{{ i18n.t('authForm.username') }}</span>
       <div class="relative flex items-center">
         <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">person</span>
         <input 
@@ -54,7 +56,7 @@ const handleSubmit = () => {
     </label>
     
     <label class="flex flex-col gap-1.5">
-      <span class="text-slate-700 dark:text-slate-200 text-sm font-medium">Email</span>
+      <span class="text-slate-700 dark:text-slate-200 text-sm font-medium">{{ i18n.t('authForm.email') }}</span>
       <div class="relative flex items-center">
         <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">mail</span>
         <input 
@@ -67,7 +69,7 @@ const handleSubmit = () => {
     </label>
 
     <label class="flex flex-col gap-1.5">
-      <span class="text-slate-700 dark:text-slate-200 text-sm font-medium">Пароль</span>
+      <span class="text-slate-700 dark:text-slate-200 text-sm font-medium">{{ i18n.t('authForm.password') }}</span>
       <div class="relative flex items-center">
         <span class="material-symbols-outlined absolute left-4 text-slate-400 text-[20px]">lock</span>
         <input 
@@ -80,7 +82,7 @@ const handleSubmit = () => {
     </label>
 
     <button class="w-full h-12 mt-2 bg-primary hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2">
-      <span>{{ mode === 'login' ? 'Войти' : 'Создать аккаунт' }}</span>
+      <span>{{ mode === 'login' ? i18n.t('authForm.login') : i18n.t('authForm.register') }}</span>
       <span class="material-symbols-outlined text-lg">{{ mode === 'login' ? 'login' : 'person_add' }}</span>
     </button>
   </form>
