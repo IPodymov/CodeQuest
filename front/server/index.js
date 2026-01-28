@@ -21,6 +21,8 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
+const ADMIN_KEY = process.env.ADMIN_KEY ?? 'dev-admin-key';
+
 const selectUserByIdentifier = db.prepare(`
   SELECT id, email, username, handle, password_hash, location, avatar_url AS avatar, status
   FROM users
@@ -47,6 +49,13 @@ const insertUserRole = db.prepare(`
 `);
 const updateLastLogin = db.prepare(`
   UPDATE users SET last_login_at = datetime('now') WHERE id = ?
+`);
+const insertUserRoleByName = db.prepare(`
+  INSERT OR IGNORE INTO user_roles (user_id, role_id)
+  VALUES (?, (SELECT id FROM roles WHERE name = ?))
+`);
+const selectRoleByName = db.prepare(`
+  SELECT id FROM roles WHERE name = ?
 `);
 
 function makeHandle(username) {
@@ -135,6 +144,33 @@ app.post('/api/login', (req, res) => {
   }
 
   updateLastLogin.run(userRow.id);
+  const updated = selectUserByIdentifier.get(userRow.email, userRow.email);
+  return res.json({ user: respondUser(updated) });
+});
+
+app.post('/api/admin/assign-role', (req, res) => {
+  const adminKey = normalize(req.body.adminKey);
+  const identifier = normalize(req.body.identifier);
+  const role = normalize(req.body.role);
+
+  if (!adminKey || adminKey !== ADMIN_KEY) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+  if (!identifier || !role) {
+    return res.status(400).json({ message: 'Identifier and role are required.' });
+  }
+
+  const roleRow = selectRoleByName.get(role);
+  if (!roleRow) {
+    return res.status(400).json({ message: 'Unknown role.' });
+  }
+
+  const userRow = selectUserByIdentifier.get(identifier, identifier);
+  if (!userRow) {
+    return res.status(404).json({ message: 'User not found.' });
+  }
+
+  insertUserRoleByName.run(userRow.id, role);
   const updated = selectUserByIdentifier.get(userRow.email, userRow.email);
   return res.json({ user: respondUser(updated) });
 });

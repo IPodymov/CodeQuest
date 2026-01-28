@@ -284,6 +284,20 @@ export const messages = {
       loginText: 'Войдите в аккаунт, чтобы открыть админ‑панель.',
       accessDeniedTitle: 'Нет доступа',
       accessDeniedText: 'Нужна роль admin или organizer.',
+      assignTitle: 'Выдать роль',
+      assignIdentifier: 'Email или ник',
+      assignPlaceholder: 'user@example.com или nickname',
+      assignRole: 'Роль',
+      assignKey: 'Admin key',
+      assignSubmit: 'Выдать',
+      assignSuccess: 'Роль назначена',
+      assignFailed: 'Не удалось назначить роль',
+      assignRequired: 'Заполните все поля',
+      roles: {
+        admin: 'Админ',
+        organizer: 'Организатор',
+        user: 'Пользователь'
+      },
       stats: {
         users: 'Пользователи',
         contests: 'Соревнования',
@@ -620,6 +634,20 @@ export const messages = {
       loginText: 'Please sign in to access the admin panel.',
       accessDeniedTitle: 'Access denied',
       accessDeniedText: 'Admin or organizer role required.',
+      assignTitle: 'Assign role',
+      assignIdentifier: 'Email or username',
+      assignPlaceholder: 'user@example.com or nickname',
+      assignRole: 'Role',
+      assignKey: 'Admin key',
+      assignSubmit: 'Assign',
+      assignSuccess: 'Role assigned',
+      assignFailed: 'Failed to assign role',
+      assignRequired: 'Fill in all fields',
+      roles: {
+        admin: 'Admin',
+        organizer: 'Organizer',
+        user: 'User'
+      },
       stats: {
         users: 'Users',
         contests: 'Contests',
