@@ -1,4 +1,5 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import { ContestResult } from "./ContestResult";
 
 @Entity()
 export class User {
@@ -15,7 +16,7 @@ export class User {
     name!: string;
 
     @Column({type: "varchar", default: 'user'})
-    role!: 'admin' | 'user';
+    role!: 'admin' | 'organizer' | 'user';
 
     @Column({type: "varchar", nullable: true})
     avatar?: string;
@@ -31,4 +32,7 @@ export class User {
 
     @Column({type: "int", default: 0})
     solved!: number;
+
+    @OneToMany(() => ContestResult, (result) => result.user)
+    results?: ContestResult[];
 }

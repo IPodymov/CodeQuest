@@ -14,12 +14,24 @@ export class Contest {
     @Column({type: "timestamp"})
     startTime!: Date;
 
-    @Column({type: "varchar"})
-    duration!: string;
-
-    @Column({type: "varchar"})
-    url!: string;
+    @Column({type: "varchar", nullable: true})
+    duration?: string | null;
 
     @Column({type: "varchar", nullable: true})
-    description?: string;
+    url?: string | null;
+
+    @Column({type: "text", nullable: true})
+    description?: string | null;
+
+    @Column({type: "varchar", nullable: true})
+    difficulty?: string | null;
+
+    @Column({type: "varchar", nullable: true})
+    icon?: string | null;
+
+    @Column({type: "text", nullable: true})
+    imageUrl?: string | null;
+
+    @Column({type: "varchar", nullable: true})
+    background?: string | null;
 }

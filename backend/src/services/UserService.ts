@@ -20,9 +20,12 @@ export class UserService implements IUserService {
             name,
             email,
             password: hashedPassword,
-            role: email.includes('admin') ? 'admin' : 'user',
+            role: email === 'admin@admin' ? 'admin' : 'user',
             avatar: avatar || null,
-            location: location || null
+            location: location || null,
+            rating: 0,
+            participations: 0,
+            solved: 0
         } as User;
 
         return this.userRepository.create(newUser);

@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { User } from "./models/User";
 import { Contest } from "./models/Contest";
+import { ContestResult } from "./models/ContestResult";
 import dotenv from "dotenv";
 dotenv.config();
 export const AppDataSource = new DataSource({
@@ -9,7 +10,7 @@ export const AppDataSource = new DataSource({
     url: process.env.DATABASE_URL,
     synchronize: true,
     logging: false,
-    entities: [User, Contest],
+    entities: [User, Contest, ContestResult],
     subscribers: [],
     migrations: [],
 });

@@ -26,7 +26,7 @@ class App {
             origin: allowedOrigins,
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization']
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Key']
         }));
 
         this.app.use(morgan(
@@ -39,8 +39,8 @@ class App {
         ));
 
         this.app.use(cookieParser());
-        this.app.use(express.json());
-        this.app.use(express.urlencoded({extended: false}));
+        this.app.use(express.json({limit: '5mb'}));
+        this.app.use(express.urlencoded({extended: false, limit: '5mb'}));
     }
 
     private routes(): void {

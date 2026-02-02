@@ -4,4 +4,6 @@ export interface IContestRepository {
     getAll(): Promise<Contest[]>;
     getById(id: string): Promise<Contest | null>;
     create(contest: Contest): Promise<Contest>;
+    delete(id: string): Promise<boolean>;
+    count(): Promise<number>;
 }

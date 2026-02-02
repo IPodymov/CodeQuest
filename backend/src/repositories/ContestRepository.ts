@@ -17,4 +17,13 @@ export class ContestRepository implements IContestRepository {
         const newContest = this.repository.create(contest);
         return this.repository.save(newContest);
     }
+
+    async delete(id: string): Promise<boolean> {
+        const result = await this.repository.delete(id);
+        return (result.affected ?? 0) > 0;
+    }
+
+    async count(): Promise<number> {
+        return this.repository.count();
+    }
 }

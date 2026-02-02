@@ -18,4 +18,8 @@ export class ContestService implements IContestService {
         // Business logic can go here (validation, etc.)
         return this.contestRepository.create(contest);
     }
+
+    async deleteContest(id: string): Promise<boolean> {
+        return this.contestRepository.delete(id);
+    }
 }

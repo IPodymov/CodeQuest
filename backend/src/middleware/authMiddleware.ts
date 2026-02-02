@@ -29,3 +29,31 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
         next();
     });
 };
+
+export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (req.user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+};
+
+export const requireAdminOrOrganizer = (req: AuthRequest, res: Response, next: NextFunction) => {
+    const role = req.user?.role;
+    if (role !== 'admin' && role !== 'organizer') {
+        return res.status(403).json({ message: 'Admin or organizer access required' });
+    }
+    next();
+};
+
+export const requireAdminKey = (req: Request, res: Response, next: NextFunction) => {
+    const expectedKey = process.env.ADMIN_KEY || 'dev-admin-key';
+    const headerKey = req.headers['x-admin-key'];
+    const queryKey = req.query?.adminKey;
+    const bodyKey = (req as any).body?.adminKey;
+    const providedKey = (headerKey || queryKey || bodyKey) as string | undefined;
+
+    if (!providedKey || providedKey !== expectedKey) {
+        return res.status(403).json({ message: 'Invalid admin key' });
+    }
+    next();
+};
