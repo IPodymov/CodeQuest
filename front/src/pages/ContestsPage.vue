@@ -1,123 +1,103 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/user';
-import { useI18nStore } from '@/stores/i18n';
+import {computed, onMounted, ref} from 'vue';
+import {useRouter} from 'vue-router';
+import {useUserStore} from '@/stores/user';
+import {useI18nStore} from '@/stores/i18n';
 import BaseModal from '@/shared/ui/BaseModal.vue';
+import {useContestsStore} from '@/stores/contests';
+import type {Contest} from '@/stores/contests';
 
 const router = useRouter();
 const userStore = useUserStore();
+const contestsStore = useContestsStore();
 const i18n = useI18nStore();
 
 const isContestModalOpen = ref(false);
+const isDeleting = ref(false);
 
 const selectedContestId = ref<string | null>(null);
-
-const contestItems = [
-  {
-    id: 'cf930',
-    titleKey: 'contests.items.cf930.title',
-    descKey: 'contests.items.cf930.desc',
-    platform: 'Codeforces',
-    time: '14:30',
-    diff: 'medium',
-    icon: 'code',
-    badgeClass: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
-    img: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1000&auto=format&fit=crop'
-  },
-  {
-    id: 'atcoder369',
-    titleKey: 'contests.items.atcoder369.title',
-    descKey: 'contests.items.atcoder369.desc',
-    platform: 'AtCoder',
-    time: '20:00',
-    diff: 'easy',
-    icon: 'rocket_launch',
-    badgeClass: 'bg-green-500/10 border-green-500/20 text-green-400',
-    img: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1000&auto=format&fit=crop'
-  },
-  {
-    id: 'lc402',
-    titleKey: 'contests.items.lc402.title',
-    descKey: 'contests.items.lc402.desc',
-    platform: 'LeetCode',
-    time: '17:00',
-    diff: 'sprint',
-    icon: 'timer',
-    badgeClass: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-    img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1000&auto=format&fit=crop'
-  },
-  {
-    id: 'icpc',
-    titleKey: 'contests.items.icpc.title',
-    descKey: 'contests.items.icpc.desc',
-    platform: 'ICPC',
-    time: '12:00',
-    diff: 'hard',
-    icon: 'groups',
-    badgeClass: 'bg-red-500/10 border-red-500/20 text-red-400',
-    img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1000&auto=format&fit=crop'
-  },
-  {
-    id: 'hr',
-    titleKey: 'contests.items.hr.title',
-    descKey: 'contests.items.hr.desc',
-    platform: 'HackerRank',
-    time: '09:30',
-    diff: 'intermediate',
-    icon: 'bolt',
-    badgeClass: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
-    img: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1000&auto=format&fit=crop'
-  },
-  {
-    id: 'cq3',
-    titleKey: 'contests.items.cq3.title',
-    descKey: 'contests.items.cq3.desc',
-    platform: 'CodeQuest',
-    time: '19:00',
-    diff: 'mixed',
-    icon: 'emoji_events',
-    badgeClass: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
-    img: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1000&auto=format&fit=crop'
-  }
-];
 
 const query = ref('');
 const platformFilter = ref('all');
 const difficultyFilter = ref('all');
+const showFavorites = ref(false);
 
 const platformOptions = computed(() => {
-  return Array.from(new Set(contestItems.map((item) => item.platform)));
+  return Array.from(new Set(contestsStore.contests.map((item) => item.platform))).filter(Boolean);
 });
 
 const difficultyOptions = computed(() => {
-  return Array.from(new Set(contestItems.map((item) => item.diff)));
+  return Array.from(new Set(contestsStore.contests.map((item) => item.difficulty))).filter(Boolean);
 });
 
-const mapContest = (item: typeof contestItems[number]) => {
+const difficultyBadge = (difficulty?: string | null) => {
+  switch (difficulty) {
+    case 'easy':
+    case 'beginner':
+      return 'bg-green-500/10 border-green-500/20 text-green-400';
+    case 'sprint':
+      return 'bg-blue-500/10 border-blue-500/20 text-blue-400';
+    case 'hard':
+      return 'bg-red-500/10 border-red-500/20 text-red-400';
+    case 'intermediate':
+      return 'bg-orange-500/10 border-orange-500/20 text-orange-400';
+    case 'mixed':
+      return 'bg-slate-500/10 border-slate-500/20 text-slate-300';
+    default:
+      return 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400';
+  }
+};
+
+const dateLocale = computed(() => (i18n.locale.value === 'ru' ? 'ru-RU' : 'en-US'));
+const isAdmin = computed(() => userStore.user?.role === 'admin');
+
+const formatTime = (value?: string | null) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString(dateLocale.value, {hour: '2-digit', minute: '2-digit'});
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(dateLocale.value, {day: '2-digit', month: 'short'});
+};
+
+const mapContest = (item: Contest) => {
+  const difficulty = item.difficulty ?? 'medium';
   return {
     ...item,
-    title: i18n.t(item.titleKey),
-    desc: i18n.t(item.descKey),
-    diffLabel: i18n.t(`contests.difficulty.${item.diff}`)
+    title: item.title,
+    desc: item.description || '',
+    diff: difficulty,
+    diffLabel: i18n.t(`contests.difficulty.${difficulty}`),
+    time: formatTime(item.startTime),
+    date: formatDate(item.startTime),
+    icon: item.icon || 'emoji_events',
+    badgeClass: difficultyBadge(difficulty),
+    img: item.imageUrl || '',
+    background: item.background || ''
   };
 };
 
 const filteredContests = computed(() => {
   const normalizedQuery = query.value.trim().toLowerCase();
-  return contestItems
+  return contestsStore.contests
     .filter((item) => {
       if (platformFilter.value !== 'all' && item.platform !== platformFilter.value) return false;
-      if (difficultyFilter.value !== 'all' && item.diff !== difficultyFilter.value) return false;
+      if (difficultyFilter.value !== 'all' && item.difficulty !== difficultyFilter.value) return false;
+      if (showFavorites.value && !contestsStore.isFavorite(item.id)) return false;
       if (!normalizedQuery) return true;
-      const title = i18n.t(item.titleKey).toLowerCase();
+      const title = item.title.toLowerCase();
       return title.includes(normalizedQuery);
     })
     .map(mapContest);
 });
 
 const selectedContest = computed(() => {
-  const item = contestItems.find((contest) => contest.id === selectedContestId.value);
+  const item = contestsStore.contests.find((contest) => contest.id === selectedContestId.value);
   return item ? mapContest(item) : null;
 });
 
@@ -145,11 +125,45 @@ const registerForEvent = () => {
   isContestModalOpen.value = false;
 };
 
+const deleteContest = async () => {
+  if (!selectedContestId.value || isDeleting.value) return;
+  if (!confirm(i18n.t('contests.deleteConfirm'))) return;
+  try {
+    isDeleting.value = true;
+    await contestsStore.deleteContest(selectedContestId.value);
+    alert(i18n.t('contests.deleteSuccess'));
+    isContestModalOpen.value = false;
+    selectedContestId.value = null;
+  } catch (e) {
+    alert(i18n.t('contests.deleteError'));
+  } finally {
+    isDeleting.value = false;
+  }
+};
+
 const resetFilters = () => {
   query.value = '';
   platformFilter.value = 'all';
   difficultyFilter.value = 'all';
 };
+
+const toggleFavoritesView = () => {
+  showFavorites.value = !showFavorites.value;
+};
+
+const toggleFavorite = (id: string) => {
+  contestsStore.toggleFavorite(id);
+};
+
+const favoriteLabel = (id: string) => {
+  return contestsStore.isFavorite(id) ? i18n.t('contests.favoritesRemove') : i18n.t('contests.favoritesAdd');
+};
+
+onMounted(() => {
+  if (!contestsStore.contests.length) {
+    contestsStore.fetchContests();
+  }
+});
 </script>
 
 <template>
@@ -189,9 +203,17 @@ const resetFilters = () => {
             <option v-for="difficulty in difficultyOptions" :key="difficulty" :value="difficulty">{{ i18n.t(`contests.difficulty.${difficulty}`) }}</option>
           </select>
         </label>
-        <div class="lg:col-span-4 flex justify-end">
+        <div class="lg:col-span-4 flex flex-wrap items-center justify-between gap-3">
           <button @click="resetFilters" class="h-10 px-4 rounded-lg border border-surface-border bg-surface-dark text-text-secondary hover:text-white hover:border-primary transition-colors text-xs font-bold">
             {{ i18n.t('contests.reset') }}
+          </button>
+          <button
+            @click="toggleFavoritesView"
+            class="h-10 px-4 rounded-lg border border-surface-border bg-surface-dark text-text-secondary hover:text-white hover:border-primary transition-colors text-xs font-bold flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-[18px]">bookmark</span>
+            <span>{{ showFavorites ? i18n.t('contests.showAll') : i18n.t('contests.showFavorites') }}</span>
+            <span v-if="contestsStore.favoritesCount" class="text-primary">({{ contestsStore.favoritesCount }})</span>
           </button>
         </div>
       </div>
@@ -203,20 +225,42 @@ const resetFilters = () => {
           @click="openContestModal(contest.id)"
           class="cursor-pointer flex flex-col gap-4 rounded-xl border border-surface-border bg-[#192633] p-5 hover:border-primary hover:shadow-lg transition-all duration-300 group"
         >
-          <div class="flex justify-between items-start">
-            <div class="flex items-center gap-3">
-              <span class="material-symbols-outlined text-white text-[32px]">{{ contest.icon }}</span>
-              <div><p class="text-xs text-[#92adc9] uppercase font-semibold">{{ i18n.t('common.platform') }}</p><p class="text-white font-bold text-sm">{{ contest.platform }}</p></div>
+          <div class="h-24 rounded-lg overflow-hidden relative">
+            <img v-if="contest.img" :src="contest.img" class="w-full h-full object-cover opacity-70" />
+            <div v-else class="w-full h-full" :style="{ background: contest.background || 'linear-gradient(135deg, #1f2a37, #0f172a)' }"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-[#111a22] to-transparent"></div>
+            <div class="absolute inset-0 flex items-center gap-3 px-4">
+              <span class="material-symbols-outlined text-white text-[28px]">{{ contest.icon }}</span>
+              <div>
+                <p class="text-xs text-[#92adc9] uppercase font-semibold">{{ i18n.t('common.platform') }}</p>
+                <p class="text-white font-bold text-sm">{{ contest.platform }}</p>
+              </div>
             </div>
+          </div>
+          <div class="flex justify-between items-start">
             <span class="px-2.5 py-1 rounded-md border text-xs font-bold uppercase" :class="contest.badgeClass">{{ contest.diffLabel }}</span>
+            <button
+              @click.stop="toggleFavorite(contest.id)"
+              :title="favoriteLabel(contest.id)"
+              class="size-9 rounded-lg border border-surface-border bg-surface-dark text-text-secondary hover:text-primary hover:border-primary transition-colors flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-[18px]">{{ contestsStore.isFavorite(contest.id) ? 'bookmark' : 'bookmark_border' }}</span>
+            </button>
           </div>
           <div class="py-2 flex-1">
             <h3 class="text-xl font-bold text-white mb-3 group-hover:text-primary transition-colors">{{ contest.title }}</h3>
-            <div class="flex items-center gap-2 text-[#92adc9] text-sm"><span class="material-symbols-outlined text-[18px]">calendar_month</span><span>{{ contest.time }}</span></div>
+            <div class="flex items-center gap-2 text-[#92adc9] text-sm"><span class="material-symbols-outlined text-[18px]">calendar_month</span><span>{{ contest.date }} {{ contest.time }}</span></div>
+            <p v-if="isAdmin" class="mt-2 text-xs text-[#92adc9] break-all">
+              <span class="font-semibold">{{ i18n.t('contests.idLabel') }}:</span> {{ contest.id }}
+            </p>
           </div>
           <div class="w-full bg-surface-border h-[1px]"></div>
           <button class="flex-1 bg-primary hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm transition-colors flex items-center justify-center gap-2">{{ i18n.t('common.details') }}</button>
         </div>
+      </div>
+
+      <div v-if="!filteredContests.length && !contestsStore.loading" class="rounded-xl border border-dashed border-surface-border bg-[#111a22] p-10 text-center text-text-secondary">
+        <p class="text-sm">{{ showFavorites ? i18n.t('contests.favoritesEmpty') : i18n.t('contests.empty') }}</p>
       </div>
     </div>
 
@@ -224,7 +268,8 @@ const resetFilters = () => {
     <BaseModal :is-open="isContestModalOpen" @close="isContestModalOpen = false" class="!p-0 !max-w-2xl">
       <div v-if="selectedContest" class="flex flex-col">
         <div class="h-48 w-full relative">
-          <img :src="selectedContest.img" class="w-full h-full object-cover opacity-60" />
+          <img v-if="selectedContest.img" :src="selectedContest.img" class="w-full h-full object-cover opacity-60" />
+          <div v-else class="w-full h-full" :style="{ background: selectedContest.background || 'linear-gradient(135deg, #1f2a37, #0f172a)' }"></div>
           <div class="absolute inset-0 bg-gradient-to-t from-[#111a22] to-transparent"></div>
           <button @click="isContestModalOpen = false" class="absolute top-4 right-4 bg-black/50 hover:bg-black/80 rounded-full p-2 text-white transition-colors backdrop-blur-md">
             <span class="material-symbols-outlined text-[20px]">close</span>
@@ -237,20 +282,35 @@ const resetFilters = () => {
         <div class="p-8 pb-4 bg-[#111a22]">
           <div class="flex flex-wrap gap-4 mb-6">
             <div class="flex items-center gap-2 text-text-secondary bg-surface-dark px-3 py-1.5 rounded-lg border border-surface-border">
-              <span class="material-symbols-outlined text-[18px]">schedule</span><span class="text-sm font-medium">{{ selectedContest.time }}</span>
+              <span class="material-symbols-outlined text-[18px]">schedule</span><span class="text-sm font-medium">{{ selectedContest.date }} {{ selectedContest.time }}</span>
             </div>
             <div class="flex items-center gap-2 text-text-secondary bg-surface-dark px-3 py-1.5 rounded-lg border border-surface-border">
               <span class="material-symbols-outlined text-[18px]">signal_cellular_alt</span><span class="text-sm font-medium">{{ selectedContest.diffLabel }}</span>
             </div>
+            <div v-if="selectedContest.duration" class="flex items-center gap-2 text-text-secondary bg-surface-dark px-3 py-1.5 rounded-lg border border-surface-border">
+              <span class="material-symbols-outlined text-[18px]">timer</span><span class="text-sm font-medium">{{ selectedContest.duration }}</span>
+            </div>
+            <div v-if="selectedContest.url" class="flex items-center gap-2 text-text-secondary bg-surface-dark px-3 py-1.5 rounded-lg border border-surface-border">
+              <span class="material-symbols-outlined text-[18px]">link</span>
+              <a :href="selectedContest.url" target="_blank" rel="noopener" class="text-sm font-medium text-primary hover:text-blue-300 underline">{{ i18n.t('contests.openLink') }}</a>
+            </div>
+            <div v-if="isAdmin" class="flex items-center gap-2 text-text-secondary bg-surface-dark px-3 py-1.5 rounded-lg border border-surface-border">
+              <span class="material-symbols-outlined text-[18px]">tag</span>
+              <span class="text-sm font-medium">{{ i18n.t('contests.idLabel') }}: {{ selectedContest.id }}</span>
+            </div>
           </div>
           <div class="prose prose-invert max-w-none">
             <h4 class="text-white font-bold mb-2 text-lg">{{ i18n.t('contests.aboutTitle') }}</h4>
-            <p class="text-slate-300 text-sm leading-relaxed">{{ selectedContest.desc }}</p>
+            <p class="text-slate-300 text-sm leading-relaxed">{{ selectedContest.desc || i18n.t('contests.noDescription') }}</p>
           </div>
         </div>
-        <div class="p-6 border-t border-surface-border flex gap-4 bg-[#16212e]">
+        <div class="p-6 border-t border-surface-border flex flex-col sm:flex-row gap-3 bg-[#16212e]">
           <button @click="registerForEvent" class="flex-1 h-12 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
             <span class="material-symbols-outlined">how_to_reg</span>{{ i18n.t('contests.register') }}
+          </button>
+          <button v-if="isAdmin" @click="deleteContest" :disabled="isDeleting" class="flex-1 h-12 bg-red-500/10 border border-red-400/30 text-red-200 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors disabled:opacity-50">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            {{ i18n.t('contests.deleteEvent') }}
           </button>
         </div>
       </div>

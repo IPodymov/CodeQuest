@@ -17,7 +17,7 @@ export const useUserStore = defineStore('user', () => {
     // useStorage автоматически сохраняет данные в localStorage
     const user = useStorage<User | null>('codequest_user', null, localStorage, {mergeDefaults: true});
     const token = useStorage<string | null>('codequest_token', null, localStorage);
-    const apiBase = import.meta.env.VITE_API_BASE ?? 'http://localhost:3000';
+    const apiBase = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
 
     async function apiFetch<T>(path: string, options: RequestInit = {}) {
         const response = await fetch(`${apiBase}${path}`, {

@@ -1,17 +1,61 @@
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
 import { useUserStore } from '@/stores/user';
+import { useContestsStore } from '@/stores/contests';
 import { useI18nStore } from '@/stores/i18n';
 import { RouterLink } from 'vue-router';
 
 const userStore = useUserStore();
+const contestsStore = useContestsStore();
 const i18n = useI18nStore();
+const apiBase = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
 
-// Фейковые данные для Топа игроков
-const topPlayers = [
-  { rank: 1, name: 'tourist', rating: 3850, avatar: 'https://ui-avatars.com/api/?name=T&background=ff0000&color=fff' },
-  { rank: 2, name: 'Benq', rating: 3600, avatar: 'https://ui-avatars.com/api/?name=B&background=0000ff&color=fff' },
-  { rank: 3, name: 'Petr', rating: 3450, avatar: 'https://ui-avatars.com/api/?name=P&background=008000&color=fff' },
-];
+type TopPlayer = {
+  id: string;
+  name: string;
+  rating: number;
+  avatar?: string | null;
+};
+
+const topPlayers = ref<TopPlayer[]>([]);
+const leaderboardError = ref(false);
+const isLeaderboardLoading = ref(false);
+
+const displayRating = computed(() => userStore.user?.rating ?? 0);
+const contestCount = computed(() => contestsStore.contests.length);
+const platformCount = computed(() => new Set(contestsStore.contests.map((item) => item.platform).filter(Boolean)).size);
+const levelCount = computed(() => new Set(contestsStore.contests.map((item) => item.difficulty).filter(Boolean)).size);
+
+const avatarFor = (player: TopPlayer) => {
+  if (player.avatar) return player.avatar;
+  const name = player.name || 'U';
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2b8cee&color=fff`;
+};
+
+const fetchLeaderboard = async () => {
+  leaderboardError.value = false;
+  isLeaderboardLoading.value = true;
+  try {
+    const response = await fetch(`${apiBase}/api/leaderboard?limit=3`);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data?.message ?? 'Failed to load leaderboard');
+    }
+    topPlayers.value = Array.isArray(data?.players) ? data.players : [];
+  } catch (error) {
+    topPlayers.value = [];
+    leaderboardError.value = true;
+  } finally {
+    isLeaderboardLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchLeaderboard();
+  if (!contestsStore.contests.length) {
+    contestsStore.fetchContests();
+  }
+});
 </script>
 
 <template>
@@ -21,14 +65,14 @@ const topPlayers = [
       <div class="max-w-[1200px] w-full">
         <div class="flex flex-col-reverse lg:flex-row gap-16 items-center">
           
-          <!-- Левая часть: Текст -->
+          <!-- Left side: text -->
           <div class="flex flex-col gap-6 flex-1 text-center lg:text-left z-10">
             <template v-if="userStore.user">
               <h1 class="text-4xl lg:text-6xl font-black leading-tight tracking-tight text-white">
                 {{ i18n.t('home.hero.authTitlePrefix') }} <span class="text-primary">{{ userStore.user.name }}</span>{{ i18n.t('home.hero.authTitleSuffix') }}
               </h1>
               <p class="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
-                {{ i18n.t('home.hero.ratingLabel') }} <span class="text-white font-bold">1854</span>.
+                {{ i18n.t('home.hero.ratingLabel') }} <span class="text-white font-bold">{{ displayRating }}</span>.
                 {{ i18n.t('home.hero.authText') }}
               </p>
               <div class="pt-4 flex justify-center lg:justify-start gap-4">
@@ -43,7 +87,7 @@ const topPlayers = [
 
             <template v-else>
               <h1 class="text-4xl lg:text-6xl font-black leading-tight tracking-tight text-white">
-                <span class="text-primary">{{ i18n.t('home.hero.guestAccent') }}</span> — {{ i18n.t('home.hero.guestRest') }}
+                <span class="text-primary">{{ i18n.t('home.hero.guestAccent') }}</span> - {{ i18n.t('home.hero.guestRest') }}
               </h1>
               <p class="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
                 {{ i18n.t('home.hero.guestText') }}
@@ -59,7 +103,7 @@ const topPlayers = [
             </template>
           </div>
 
-          <!-- Правая часть: Картинка и Топ игроков -->
+          <!-- Right side: image + top players -->
           <div class="flex-1 w-full max-w-[600px] relative">
             <div class="aspect-[4/3] w-full bg-gradient-to-br from-surface-dark to-background-dark border border-surface-border rounded-2xl overflow-hidden relative shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500">
               <img src="https://img.freepik.com/premium-photo/professional-programmer-engineer-writing-code_1029473-73206.jpg" class="w-full h-full object-cover opacity-80 mix-blend-overlay" :alt="i18n.t('common.codingBackground')" />
@@ -78,11 +122,20 @@ const topPlayers = [
               <h3 class="text-white font-bold text-sm mb-3 flex items-center gap-2">
                 <span class="material-symbols-outlined text-yellow-500">trophy</span> {{ i18n.t('home.hero.topTitle') }}
               </h3>
-              <div class="flex flex-col gap-3">
-                <div v-for="player in topPlayers" :key="player.rank" class="flex items-center justify-between">
+              <div v-if="isLeaderboardLoading" class="text-xs text-text-secondary">
+                {{ i18n.t('home.hero.topLoading') }}
+              </div>
+              <div v-else-if="leaderboardError" class="text-xs text-red-400">
+                {{ i18n.t('home.hero.topError') }}
+              </div>
+              <div v-else-if="!topPlayers.length" class="text-xs text-text-secondary">
+                {{ i18n.t('home.hero.topEmpty') }}
+              </div>
+              <div v-else class="flex flex-col gap-3">
+                <div v-for="(player, index) in topPlayers" :key="player.id || player.name || index" class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <span class="text-xs text-text-secondary font-bold w-4">{{ player.rank }}</span>
-                    <img :src="player.avatar" class="size-6 rounded-full">
+                    <span class="text-xs text-text-secondary font-bold w-4">{{ index + 1 }}</span>
+                    <img :src="avatarFor(player)" class="size-6 rounded-full">
                     <span class="text-sm text-white font-medium">{{ player.name }}</span>
                   </div>
                   <span class="text-xs text-primary font-bold">{{ player.rating }}</span>
@@ -97,9 +150,18 @@ const topPlayers = [
     <!-- Stats Section -->
     <div class="w-full border-y border-surface-border bg-surface-dark/30">
       <div class="max-w-[1200px] mx-auto px-6 py-12 flex flex-wrap justify-center gap-10 lg:justify-between text-center lg:text-left">
-        <div class="flex flex-col gap-1"><span class="text-4xl font-black text-white">500+</span><span class="text-sm text-text-secondary font-medium uppercase tracking-wide">{{ i18n.t('home.stats.contests') }}</span></div>
-        <div class="flex flex-col gap-1"><span class="text-4xl font-black text-white">12k+</span><span class="text-sm text-text-secondary font-medium uppercase tracking-wide">{{ i18n.t('home.stats.participants') }}</span></div>
-        <div class="flex flex-col gap-1"><span class="text-4xl font-black text-white">50+</span><span class="text-sm text-text-secondary font-medium uppercase tracking-wide">{{ i18n.t('home.stats.countries') }}</span></div>
+        <div class="flex flex-col gap-1">
+          <span class="text-4xl font-black text-white">{{ contestsStore.loading ? '...' : contestCount }}</span>
+          <span class="text-sm text-text-secondary font-medium uppercase tracking-wide">{{ i18n.t('home.stats.contests') }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-4xl font-black text-white">{{ contestsStore.loading ? '...' : platformCount }}</span>
+          <span class="text-sm text-text-secondary font-medium uppercase tracking-wide">{{ i18n.t('home.stats.participants') }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-4xl font-black text-white">{{ contestsStore.loading ? '...' : levelCount }}</span>
+          <span class="text-sm text-text-secondary font-medium uppercase tracking-wide">{{ i18n.t('home.stats.countries') }}</span>
+        </div>
       </div>
     </div>
 
@@ -207,3 +269,5 @@ const topPlayers = [
     </section>
   </main>
 </template>
+
+
